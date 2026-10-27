@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; 
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .error {
+            color: #d93025;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 15px;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        /* Toast styling */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+        }
+        .toast.success { background-color: #28a745; display: block; }
+        .toast.error { background-color: #dc3545; display: block; }
+    </style>
+</head>
+<body>
+    <form id="myForm" novalidate>
+        <div class="field">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" />
+            <span class="error" id="fullNameError"></span>
+        </div>
+        
+        <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role">
+                <option value="">-- Select --</option>
+                <option value="frontend">Frontend Intern</option>
+                <option value="backend">Backend Intern</option>
+            </select>
+            <span class="error" id="roleError"></span>
+        </div>
+
+        <div class="field">
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" />
+            <span class="error" id="startDateError"></span>
+        </div>
+
+        <div class="field">
+            <label for="avatar">Profile Image</label>
+            <input type="file" id="avatar" name="avatar" accept="image/*" />
+            <span class="error" id="avatarError"></span>
+        </div>
+
+        <button type="submit" id="submitBtn">Submit Application</button>
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </form>
+
+    <!-- Notice I removed src="script.js" from this tag -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("myForm");
+            const submitBtn = document.getElementById("submitBtn");
+            const toast = document.getElementById("toast");
+
+            // --- 1. Validation Function ---
+            function validateForm() {
+                let isValid = true;
+                let firstErrorElement = null;
+
+                // Clear previous errors
+                document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+                // Full Name Validation
+                const fullName = document.getElementById("fullName").value.trim();
+                if (fullName.length < 3) {
+                    document.getElementById("fullNameError").textContent = "Name must be at least 3 characters.";
+                    isValid = false;
+                    if (!firstErrorElement) firstErrorElement = document.getElementById("fullName");
+                }
+
+                // Role Validation
+                const role = document.getElementById("role").value;
+                if (role === "") {
+                    document.getElementById("roleError").textContent = "Please select a role.";
+                    isValid = false;
+                    if (!firstErrorElement) firstErrorElement = document.getElementById("role");
+                }
+
+                // Date Validation
+                const startDate = document.getElementById("startDate").value;
+                if (!startDate) {
+                    document.getElementById("startDateError").textContent = "Please select a start date.";
+                    isValid = false;
+                    if (!firstErrorElement) firstErrorElement = document.getElementById("startDate");
+                }
+
+                // File Validation
+                const avatarInput = document.getElementById("avatar");
+                const file = avatarInput.files[0];
+                if (!file) {
+                    document.getElementById("avatarError").textContent = "Please upload a profile image.";
+                    isValid = false;
+                    if (!firstErrorElement) firstErrorElement = document.getElementById("avatar");
+                } else if (!file.type.startsWith('image/')) {
+                    document.getElementById("avatarError").textContent = "File must be an image (JPG, PNG).";
+                    isValid = false;
+                } else if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                    document.getElementById("avatarError").textContent = "Image must be less than 2MB.";
+                    isValid = false;
+                }
+
+                if (firstErrorElement) firstErrorElement.focus();
+                return isValid;
+            }
+
+            // --- 2. Toast Function ---
+            function showToast(message, type) {
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    toast.className = "toast";
+                }, 3000);
+            }
+
+            // --- 3. Form Submission Logic ---
+            form.addEventListener("submit", (e) => {
+                e.preventDefault(); // Stop page reload
+
+                if (!validateForm()) {
+                    showToast("Please fix the errors above.", "error");
+                    return;
+                }
+
+                // If valid, simulate network request
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+
+                // Simulate a 2-second API call
+                setTimeout(() => {
+                    // Success!
+                    showToast("Application submitted successfully!", "success");
+                    form.reset(); // Clear the form
+                    
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Submit Application";
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
